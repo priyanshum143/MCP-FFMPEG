@@ -1,6 +1,3 @@
-def main():
-    print("Hello from mcp-ffmpeg!")
-
-
-if __name__ == "__main__":
-    main()
+"""
+This is a main file to run our MCP server
+"""
