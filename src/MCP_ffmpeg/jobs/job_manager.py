@@ -8,8 +8,9 @@ import asyncio
 from typing import Any
 from enum import Enum
 from pathlib import Path
+from dataclasses import asdict
 
-from src.MCP_ffmpeg.jobs.models import JobAction
+from src.MCP_ffmpeg.jobs.models import JobAction, JobDetails
 from src.MCP_ffmpeg.utils.variables import CommonVariables
 from src.MCP_ffmpeg.utils.loggers import get_logger
 
@@ -86,3 +87,40 @@ async def check_if_job_is_present(job_id: str) -> bool:
 
     job_dir = CommonVariables.OUTPUT_DIR / job_id
     return await asyncio.to_thread(job_dir.exists)
+
+
+async def create_job(job_id: str, action: JobAction, params: dict) -> None:
+    """
+    This method will create a job for the given task
+
+    :param job_id: job id
+    :param action: action to perform
+    :param params: params for the action
+    :return: None
+    """
+
+    # Creating a folder for this particular job
+    job_dir = CommonVariables.OUTPUT_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    # Making job details model
+    job = JobDetails(
+        job_id=job_id,
+        action=action,
+        params=params,
+    )
+
+    job_dict = asdict(job)
+
+    # Convert Enums + datetime to serializable format
+    job_dict["action"] = job.action.value
+    job_dict["status"] = job.status.value
+    job_dict["created_at"] = job.created_at.isoformat()
+    job_dict["updated_at"] = job.updated_at.isoformat()
+    logger.debug(f"Creating a job details model for job id [{job_id}] with this data: {job_dict}")
+
+    # Creating a JSON file to write details and writing the data
+    job_file = job_dir / "job_details.json"
+    with open(job_file, "w", encoding="utf-8") as f:
+        json.dump(job_dict, f, indent=4)
+    logger.debug(f"Successfully added the data for job_id: {job_id}")
