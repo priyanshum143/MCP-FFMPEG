@@ -3,7 +3,7 @@ This file will contain the models required for job manager
 """
 
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict
 
@@ -23,6 +23,6 @@ class JobDetails:
     job_id: str
     action: JobAction
     params: Dict
-    status: JobStatus
-    created_at: datetime
-    updated_at: datetime
+    status: JobStatus = JobStatus.QUEUED
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
