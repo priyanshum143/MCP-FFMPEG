@@ -11,6 +11,9 @@ from pathlib import Path
 
 from src.MCP_ffmpeg.jobs.models import JobAction
 from src.MCP_ffmpeg.utils.variables import CommonVariables
+from src.MCP_ffmpeg.utils.loggers import get_logger
+
+logger = get_logger(__name__)
 
 
 def _freeze(value: Any) -> Any:
@@ -58,17 +61,17 @@ async def generate_job_id(action: JobAction, input_file_path: str, *args) -> str
     :return: job id
     """
 
-    # Normalized path
-    normalized_path = str(Path(input_file_path))
-
+    # Creating a payload to generate a job_id
     payload = {
         "action": action.value,
-        "input": normalized_path,
+        "input": str(Path(input_file_path)),
         "args": _freeze(args),
     }
+    logger.debug(f"Payload to generate a job id: {payload}")
 
-    # canonical string
+    # canonical string to generate a job_id
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    logger.debug(f"Canonical string to generate a job id: {canonical}")
 
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
@@ -82,8 +85,4 @@ async def check_if_job_is_present(job_id: str) -> bool:
     """
 
     job_dir = CommonVariables.OUTPUT_DIR / job_id
-
     return await asyncio.to_thread(job_dir.exists)
-
-
-
