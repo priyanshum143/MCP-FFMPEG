@@ -6,6 +6,7 @@ import asyncio
 from pathlib import Path
 
 from src.MCP_ffmpeg.utils.loggers import get_logger, get_job_ffmpeg_logger
+from src.MCP_ffmpeg.utils.variables import CommonVariables
 
 logger = get_logger(__name__)
 
@@ -26,15 +27,18 @@ async def trim_a_video(
     :return: trimmed video path
     """
 
+    # Checking if the input file exists
     input_path = Path(input_file)
+    logger.debug(f"Input file's path for trim: [{input_path}]")
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found: {input_file}")
 
-    output_file = (
-        input_path.parent
-        / f"{input_path.stem}_trimmed_{start_time}_{duration}{input_path.suffix}"
-    )
+    # Setting up the output file directory
+    job_dir = CommonVariables.OUTPUT_DIR / job_id
+    output_file = job_dir / f"output{input_path.suffix}"
+    logger.debug(f"Output file will be stored at: [{output_file}]")
 
+    # Creating a command for the trim action
     cmd = [
         "ffmpeg",
         "-y",
@@ -44,20 +48,22 @@ async def trim_a_video(
         "-c", "copy",
         str(output_file),
     ]
+    logger.debug(f"Command used to trim the given video: [{cmd}]")
 
+    # Setting up the logger file for this action
     ffmpeg_log = get_job_ffmpeg_logger(job_id)
-    logger.info("job_id=%s | starting trim | input=%s", job_id, input_path)
     ffmpeg_log.info("Command: %s", " ".join(map(str, cmd)))
 
+    # Starting the process to trim the video
+    logger.info(f"job_id={job_id} | Starting trim process | input={input_path}")
     process = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.DEVNULL,
         stderr=asyncio.subprocess.PIPE,
     )
 
-    stderr_lines: list[str] = []
-
     # Stream stderr to file line-by-line
+    stderr_lines: list[str] = []
     while True:
         line = await process.stderr.readline()
         if not line:
@@ -66,27 +72,14 @@ async def trim_a_video(
         stderr_lines.append(msg)
         ffmpeg_log.info(msg)
 
+    # Checking the return code
     return_code = await process.wait()
-
     if return_code != 0:
         tail = "\n".join(stderr_lines[-20:])
-        logger.error("job_id=%s | FFmpeg trim failed", job_id)
-        ffmpeg_log.error("FFmpeg exited with code=%s", return_code)
+        logger.error(f"job_id={job_id} | FFmpeg trim failed")
+        ffmpeg_log.error(f"FFmpeg exited with code={return_code}")
         raise RuntimeError("FFmpeg trim failed\n" + tail)
 
-    logger.info("job_id=%s | trim complete | output=%s", job_id, output_file)
-    ffmpeg_log.info("Success. Output: %s", output_file)
+    logger.info(f"job_id={job_id} | Trim complete | output={output_file}")
+    ffmpeg_log.info(f"Success. Output: {output_file}")
     return str(output_file)
-
-async def main():
-    output_file = await trim_a_video(
-        "/media/priyanshu/Local Disk/Clips/Podcasts/video.mp4",
-        10,
-        10,
-        "123",
-    )
-    print("Trimmed file created at:", output_file)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
