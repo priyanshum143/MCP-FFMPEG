@@ -52,12 +52,11 @@ def _freeze(value: Any) -> Any:
     return {"__repr__": repr(value)}
 
 
-async def generate_job_id(action: JobAction, input_file_path: str, *args) -> str:
+async def generate_job_id(action: JobAction,  *args) -> str:
     """
     This method will generate a job id based on action, input file path and the other arguments
 
     :param action: action needs to be performed
-    :param input_file_path: input file path
     :param args: other arguments
     :return: job id
     """
@@ -65,7 +64,6 @@ async def generate_job_id(action: JobAction, input_file_path: str, *args) -> str
     # Creating a payload to generate a job_id
     payload = {
         "action": action.value,
-        "input": str(Path(input_file_path)),
         "args": _freeze(args),
     }
     logger.debug(f"Payload to generate a job id: {payload}")
