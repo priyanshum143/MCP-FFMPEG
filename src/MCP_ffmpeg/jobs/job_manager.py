@@ -74,7 +74,9 @@ async def generate_job_id(action: JobAction, input_file_path: str, *args) -> str
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     logger.debug(f"Canonical string to generate a job id: {canonical}")
 
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    job_id = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    logger.debug(f"Generated job id: {job_id}")
+    return job_id
 
 
 async def check_if_job_is_present(job_id: str) -> bool:
