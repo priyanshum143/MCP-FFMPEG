@@ -55,7 +55,7 @@ def setup_logger(name: str, log_file: str = None, level=logging.DEBUG):
     console_handler.setFormatter(simple_formatter)
 
     # File handler (DEBUG and above, detailed format)
-    file_handler = logging.FileHandler(log_file, encoding="utf-8", mode="w")
+    file_handler = logging.FileHandler(log_file, encoding="utf-8", mode="a")
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(detailed_formatter)
 
