@@ -125,7 +125,7 @@ class JobManager:
         job_dict["status"] = job.status.value
         job_dict["created_at"] = job.created_at.isoformat()
         job_dict["updated_at"] = job.updated_at.isoformat()
-        logger.debug(f"Creating a job details model for job id [{job_id}] with this data: {job_dict}")
+        logger.debug(f"Creating a job details model for job id [{job_id}] with data: {job_dict}")
 
         # Creating a JSON file to write details and writing the data
         job_file = job_dir / "job_details.json"
@@ -158,12 +158,12 @@ class JobManager:
         logger.debug(f"Checking if job id [{job_id}] already exists")
         does_job_exist = await self.check_if_job_is_present(job_id)
         if does_job_exist:
-            logger.debug(f"Job [{job_id}] already exists")
+            logger.debug(f"Job id [{job_id}] already exists")
             # TODO need to return proper status from the job details file
             return JobStatus.SUCCESS
 
         # Creating a new job
-        logger.debug(f"Job [{job_id}] does not exists, creating a new job")
+        logger.debug(f"Job id [{job_id}] does not exists, creating a new job")
         await self.create_job(
             job_id=job_id,
             action=action,
