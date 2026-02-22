@@ -49,7 +49,7 @@ class Worker:
         self.execution_in_progress += 1
 
         try:
-            logger.info(f"Executing the job using job id: {job_id}")
+            logger.debug(f"Executing the job using job id: {job_id}")
             await self._execute_job(job_id)
         finally:
             self.execution_in_progress -= 1

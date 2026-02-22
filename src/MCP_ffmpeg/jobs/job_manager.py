@@ -6,6 +6,7 @@ import hashlib
 import json
 import asyncio
 from dataclasses import asdict
+from typing import Tuple
 
 from src.MCP_ffmpeg.jobs.models import JobAction, JobDetails, JobStatus
 from src.MCP_ffmpeg.utils.variables import CommonVariables
@@ -98,7 +99,7 @@ class JobManager:
         logger.debug(f"Successfully added the data for job_id: {job_id}")
 
 
-    async def handle_job(self, action: JobAction, params: dict) -> JobStatus:
+    async def handle_job(self, action: JobAction, params: dict) -> Tuple[JobStatus, str]:
         """
         This is the main method to handle a job based of action and the params
 
@@ -124,7 +125,7 @@ class JobManager:
         if does_job_exist:
             logger.debug(f"Job id [{job_id}] already exists")
             # TODO need to return proper status from the job details file
-            return JobStatus.SUCCESS
+            return JobStatus.SUCCESS, job_id
 
         # Creating a new job
         logger.debug(f"Job id [{job_id}] does not exists, creating a new job")
@@ -137,4 +138,4 @@ class JobManager:
         # Adding the job in the queue
         logger.debug(f"Adding job id [{job_id}] in queue.")
         await self.job_queue.put(job_id)
-        return JobStatus.QUEUED
+        return JobStatus.QUEUED, job_id
