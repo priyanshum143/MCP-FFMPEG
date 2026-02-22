@@ -74,7 +74,7 @@ async def main():
             f"Calling job handler for action [{selected_action}] with params: {params}"
         )
         status, job_id = await job_manager.handle_job(selected_action, params)
-        print(f"Job [{job_id}] queued successfully. Current status -> {status.value}")
+        print(f"Job [{job_id}] handled successfully. Current status -> {status.value}")
         logger.debug(f"Job handled with status {status}")
 
 

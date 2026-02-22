@@ -132,6 +132,7 @@ class JobManager:
                 stored_status = job_details.get("status")
                 status = JobStatus(stored_status)
                 logger.debug(f"Returning stored status [{status.value}] for job [{job_id}]")
+                print(f"This job [{job_id}] already exists, Current Status -> {status}")
                 return status, job_id
             except Exception as e:
                 logger.error(f"Failed to read job_details.json for [{job_id}] -> {e}")

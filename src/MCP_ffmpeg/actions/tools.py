@@ -80,6 +80,6 @@ async def trim_a_video(
         ffmpeg_log.error(f"FFmpeg exited with code={return_code}")
         raise RuntimeError("FFmpeg trim failed\n" + tail)
 
-    print(f"job_id={job_id} | Trim complete | output={output_file}\n")
+    print(f"job_id={job_id} | Trim complete | output={output_file}")
     ffmpeg_log.info(f"Success. Output: {output_file}")
     return str(output_file)
