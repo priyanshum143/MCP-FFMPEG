@@ -23,6 +23,7 @@ class JobDetails:
     job_id: str
     action: JobAction
     params: Dict
+    error: str
     status: JobStatus = JobStatus.QUEUED
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
