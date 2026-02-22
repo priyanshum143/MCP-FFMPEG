@@ -124,8 +124,18 @@ class JobManager:
         does_job_exist = await self._check_if_job_is_present(job_id)
         if does_job_exist:
             logger.debug(f"Job id [{job_id}] already exists")
-            # TODO need to return proper status from the job details file
-            return JobStatus.SUCCESS, job_id
+            job_details_path = CommonVariables.OUTPUT_DIR / job_id / CommonVariables.JOB_DETAILS_JSON_FILE_NAME
+
+            try:
+                with open(job_details_path, "r") as f:
+                    job_details = json.load(f)
+                stored_status = job_details.get("status")
+                status = JobStatus(stored_status)
+                logger.debug(f"Returning stored status [{status.value}] for job [{job_id}]")
+                return status, job_id
+            except Exception as e:
+                logger.error(f"Failed to read job_details.json for [{job_id}] -> {e}")
+                return JobStatus.FAILED, job_id
 
         # Creating a new job
         logger.debug(f"Job id [{job_id}] does not exists, creating a new job")
