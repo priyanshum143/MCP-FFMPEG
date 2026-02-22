@@ -109,6 +109,7 @@ class Worker:
 
         finally:
             job_data["updated_at"] = datetime.utcnow().isoformat()
+            print(f"Job [{job_id}] is completed, status -> {job_data['status']}")
 
             with open(job_details_path, "w") as f:
                 json.dump(job_data, f, indent=4)
