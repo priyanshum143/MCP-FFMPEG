@@ -92,7 +92,7 @@ class JobManager:
         logger.debug(f"Creating a job details model for job id [{job_id}] with data: {job_dict}")
 
         # Creating a JSON file to write details and writing the data
-        job_file = job_dir / "job_details.json"
+        job_file = job_dir / CommonVariables.JOB_DETAILS_JSON_FILE_NAME
         with open(job_file, "w", encoding="utf-8") as f:
             json.dump(job_dict, f, indent=4)
         logger.debug(f"Successfully added the data for job_id: {job_id}")
