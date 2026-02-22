@@ -65,7 +65,7 @@ class Worker:
 
         job_dir = CommonVariables.OUTPUT_DIR / job_id
         job_details_path = (
-                job_dir / CommonVariables.JOB_DETAILS_JSON_FILE_NAME
+            job_dir / CommonVariables.JOB_DETAILS_JSON_FILE_NAME
         )
 
         if not job_details_path.exists():

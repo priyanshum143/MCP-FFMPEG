@@ -2,6 +2,8 @@
 This file contains the util methods to interact with CLI
 """
 
+import asyncio
+
 from src.MCP_ffmpeg.jobs.models import JobAction
 from src.MCP_ffmpeg.actions.models import JOB_ACTION_PARAMS
 from src.MCP_ffmpeg.utils.loggers import get_logger
@@ -9,7 +11,7 @@ from src.MCP_ffmpeg.utils.loggers import get_logger
 logger = get_logger(__name__)
 
 
-def prompt_params_for_action(action: JobAction) -> dict:
+async def prompt_params_for_action(action: JobAction) -> dict:
     """
     This method takes the required params for the provided action
 
@@ -27,7 +29,11 @@ def prompt_params_for_action(action: JobAction) -> dict:
 
     for key, typ in schema.items():
         while True:
-            raw = input(f"- {key} ({typ.__name__}): ").strip()
+            raw = await asyncio.to_thread(
+                input, f"- {key} ({typ.__name__}): "
+            )
+            raw = raw.strip()
+
             try:
                 if typ is str:
                     value = raw
@@ -36,10 +42,11 @@ def prompt_params_for_action(action: JobAction) -> dict:
                 elif typ is int:
                     value = int(raw)
                 else:
-                    # fallback: try calling the type
                     value = typ(raw)
+
                 params[key] = value
                 break
+
             except ValueError:
                 print(f"Invalid value for {key}. Expected {typ.__name__}. Try again.")
 

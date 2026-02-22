@@ -24,7 +24,7 @@ class JobManager:
     def __init__(self):
         self.job_queue: asyncio.Queue[str] = asyncio.Queue()
 
-    async def generate_job_id(self, action: JobAction, *args) -> str:
+    async def _generate_job_id(self, action: JobAction, *args) -> str:
         """
         This method will generate a job id based on action, input file path and the other arguments
 
@@ -49,7 +49,7 @@ class JobManager:
         return job_id
 
 
-    async def check_if_job_is_present(self, job_id: str) -> bool:
+    async def _check_if_job_is_present(self, job_id: str) -> bool:
         """
         This method will check if the given job id is already present or not
 
@@ -61,7 +61,7 @@ class JobManager:
         return await asyncio.to_thread(job_dir.exists)
 
 
-    async def create_job(self, job_id: str, action: JobAction, params: dict) -> None:
+    async def _create_job(self, job_id: str, action: JobAction, params: dict) -> None:
         """
         This method will create a job for the given task
 
@@ -112,7 +112,7 @@ class JobManager:
         args_in_order = [params[key] for key in schema.keys()]
 
         logger.debug(f"Creating a job id for action [{action.value}] with params: {args_in_order}")
-        job_id = await self.generate_job_id(
+        job_id = await self._generate_job_id(
             action,
             *args_in_order
         )
@@ -120,7 +120,7 @@ class JobManager:
 
         # Checking if job already exists
         logger.debug(f"Checking if job id [{job_id}] already exists")
-        does_job_exist = await self.check_if_job_is_present(job_id)
+        does_job_exist = await self._check_if_job_is_present(job_id)
         if does_job_exist:
             logger.debug(f"Job id [{job_id}] already exists")
             # TODO need to return proper status from the job details file
@@ -128,7 +128,7 @@ class JobManager:
 
         # Creating a new job
         logger.debug(f"Job id [{job_id}] does not exists, creating a new job")
-        await self.create_job(
+        await self._create_job(
             job_id=job_id,
             action=action,
             params=params,

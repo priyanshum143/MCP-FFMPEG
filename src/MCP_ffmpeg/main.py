@@ -38,35 +38,44 @@ async def main():
     # start worker in background
     asyncio.create_task(run_worker())
 
-    # Showing the available actions to the user
-    print("\nAvailable Actions:")
-    for idx, action in enumerate(JobAction, start=1):
-        print(f"{idx}. {action.value}")
+    while True:
+        # Printing all the available actions
+        print("\nAvailable Actions:")
+        for idx, action in enumerate(JobAction, start=1):
+            print(f"{idx}. {action.value}")
+        print("0. Exit")
 
-    # Asking user to choose an action
-    choice = input("\nSelect an action by number: ")
-    try:
-        choice = int(choice)
-        selected_action = list(JobAction)[choice - 1]
-    except (ValueError, IndexError):
-        print("Invalid selection")
-        return
-    print(f"You selected: {selected_action.value}")
-    logger.debug(f"User chose action: {selected_action.value}")
+        # Asking user to choose an action
+        choice = await asyncio.to_thread(
+            input, "\nSelect an action by number: "
+        )
+        choice = choice.strip()
 
-    # Collecting params
-    params = prompt_params_for_action(selected_action)
-    print("\nCollected params:", params)
-    logger.debug(f"Params added by user: {params}")
+        # Stop the execution
+        if choice == "0":
+            print("Exiting MCP FFmpeg Server...")
+            break
 
-    # Creating and handling the job
-    logger.debug(f"Calling the job handler for action [{selected_action}] with params: {params}")
-    status = await job_manager.handle_job(selected_action, params)
-    logger.debug(f"Job handled successfully with current status as {status}")
-    print(f"Job status for the task -> {status.value}")
+        # Mapping of user choice with actual action
+        try:
+            choice = int(choice)
+            selected_action = list(JobAction)[choice - 1]
+        except (ValueError, IndexError):
+            print("Invalid selection")
+            continue
+        print(f"You selected: {selected_action.value}")
+        logger.debug(f"User chose action: {selected_action.value}")
 
-    # WAIT until worker processes all queued jobs
-    await job_manager.job_queue.join()
+        # Taking required params for the action user chose
+        params = await prompt_params_for_action(selected_action)
+
+        # Handling the job according to action and params
+        logger.debug(
+            f"Calling job handler for action [{selected_action}] with params: {params}"
+        )
+        status = await job_manager.handle_job(selected_action, params)
+        print(f"Job queued successfully. Current status -> {status.value}")
+        logger.debug(f"Job handled with status {status}")
 
 
 if __name__ == "__main__":
