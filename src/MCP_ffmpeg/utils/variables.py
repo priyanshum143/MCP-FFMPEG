@@ -13,3 +13,4 @@ class CommonVariables:
     JOB_DETAILS_JSON_FILE_NAME = "job_details.json"
 
     PARALLEL_EXECUTIONS_ALLOWED = 1
+    WORKER_RE_RUN_TIME = 10
