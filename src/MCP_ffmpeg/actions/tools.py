@@ -55,7 +55,7 @@ async def trim_a_video(
     ffmpeg_log.info("Command: %s", " ".join(map(str, cmd)))
 
     # Starting the process to trim the video
-    print(f"\njob_id={job_id} | Starting trim process | input={input_path}")
+    logger.info(f"\njob_id={job_id} | Starting trim process | input={input_path}")
     process = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.DEVNULL,
@@ -80,6 +80,6 @@ async def trim_a_video(
         ffmpeg_log.error(f"FFmpeg exited with code={return_code}")
         raise RuntimeError("FFmpeg trim failed\n" + tail)
 
-    print(f"job_id={job_id} | Trim complete | output={output_file}")
+    logger.info(f"job_id={job_id} | Trim complete | output={output_file}")
     ffmpeg_log.info(f"Success. Output: {output_file}")
     return str(output_file)
