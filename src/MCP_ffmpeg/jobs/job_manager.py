@@ -49,7 +49,6 @@ class JobManager:
         logger.debug(f"Generated job id: {job_id}")
         return job_id
 
-
     async def _check_if_job_is_present(self, job_id: str) -> bool:
         """
         This method will check if the given job id is already present or not
@@ -60,7 +59,6 @@ class JobManager:
 
         job_dir = CommonVariables.OUTPUT_DIR / job_id
         return await asyncio.to_thread(job_dir.exists)
-
 
     async def _create_job(self, job_id: str, action: JobAction, params: dict) -> None:
         """
@@ -98,13 +96,13 @@ class JobManager:
             json.dump(job_dict, f, indent=4)
         logger.debug(f"Successfully added the data for job_id: {job_id}")
 
-
-    async def handle_job(self, action: JobAction, params: dict) -> Tuple[JobStatus, str]:
+    async def handle_job(self, action: JobAction, params: dict, force_run: bool = False) -> Tuple[JobStatus, str]:
         """
         This is the main method to handle a job based of action and the params
 
         :param action: action to perform
         :param params: params
+        :param force_run: if we need to force run a job or not
         :return: job status
         """
 
@@ -120,23 +118,26 @@ class JobManager:
         logger.debug(f"Job id generated successfully: {job_id}")
 
         # Checking if job already exists
-        logger.debug(f"Checking if job id [{job_id}] already exists")
-        does_job_exist = await self._check_if_job_is_present(job_id)
-        if does_job_exist:
-            logger.debug(f"Job id [{job_id}] already exists")
-            job_details_path = CommonVariables.OUTPUT_DIR / job_id / CommonVariables.JOB_DETAILS_JSON_FILE_NAME
+        if force_run:
+            logger.debug(f"Force run is true, skipping the cache")
+        else:
+            logger.debug(f"Checking if job id [{job_id}] already exists")
+            does_job_exist = await self._check_if_job_is_present(job_id)
+            if does_job_exist:
+                logger.debug(f"Job id [{job_id}] already exists")
+                job_details_path = CommonVariables.OUTPUT_DIR / job_id / CommonVariables.JOB_DETAILS_JSON_FILE_NAME
 
-            try:
-                with open(job_details_path, "r") as f:
-                    job_details = json.load(f)
-                stored_status = job_details.get("status")
-                status = JobStatus(stored_status)
-                logger.debug(f"Returning stored status [{status.value}] for job [{job_id}]")
-                print(f"This job [{job_id}] already exists, Current Status -> {status}")
-                return status, job_id
-            except Exception as e:
-                logger.error(f"Failed to read job_details.json for [{job_id}] -> {e}")
-                return JobStatus.FAILED, job_id
+                try:
+                    with open(job_details_path, "r") as f:
+                        job_details = json.load(f)
+                    stored_status = job_details.get("status")
+                    status = JobStatus(stored_status)
+                    logger.debug(f"Returning stored status [{status.value}] for job [{job_id}]")
+                    print(f"This job [{job_id}] already exists, Current Status -> {status}")
+                    return status, job_id
+                except Exception as e:
+                    logger.error(f"Failed to read job_details.json for [{job_id}] -> {e}")
+                    return JobStatus.FAILED, job_id
 
         # Creating a new job
         logger.debug(f"Job id [{job_id}] does not exists, creating a new job")

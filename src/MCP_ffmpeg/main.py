@@ -36,7 +36,7 @@ async def main():
     logger.info("MCP FFmpeg Server started!!")
 
     # start worker in background
-    asyncio.create_task(run_worker())
+    await asyncio.create_task(run_worker())
 
     while True:
         # Printing all the available actions

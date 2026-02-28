@@ -4,8 +4,10 @@ This file contains the code related to MCP server
 
 import asyncio
 import json
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict
+from collections.abc import AsyncIterator
 
 from mcp.server.fastmcp import FastMCP
 
@@ -16,8 +18,6 @@ from MCP_ffmpeg.utils.loggers import get_logger
 from MCP_ffmpeg.utils.variables import CommonVariables
 
 logger = get_logger(__name__)
-
-mcp = FastMCP("mcp-ffmpeg")
 
 job_manager = JobManager()
 worker = Worker()
@@ -32,6 +32,26 @@ async def _run_worker_forever() -> None:
     while True:
         await worker.get_task_from_queue_and_execute(job_manager.job_queue)
         await asyncio.sleep(CommonVariables.WORKER_RE_RUN_TIME)
+
+
+@asynccontextmanager
+async def app_lifespan(server: FastMCP) -> AsyncIterator[None]:
+    """
+    FastMCP lifespan hook: start background worker without blocking initialization.
+    """
+    task = asyncio.create_task(_run_worker_forever())
+    try:
+        yield
+    finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
+# Create server WITH lifespan so the worker starts in background
+mcp = FastMCP("mcp-ffmpeg", lifespan=app_lifespan)
 
 
 def _job_details_path(job_id: str) -> Path:
@@ -64,6 +84,7 @@ async def start_trim(
     input_file: str,
     start_time: float,
     duration: float,
+    force_run: bool = False,
 ) -> Dict[str, Any]:
     """
     Enqueue a TRIM job. Returns immediately with job_id + status.
@@ -71,6 +92,7 @@ async def start_trim(
     input_file: path to input video file (must exist)
     start_time: seconds (float)
     duration: seconds (float)
+    force_run: if we need to force run a job or not ignoring cache
     """
     params = {
         "input_file": input_file,
@@ -78,7 +100,7 @@ async def start_trim(
         "duration": duration,
     }
 
-    status, job_id = await job_manager.handle_job(JobAction.TRIM, params)
+    status, job_id = await job_manager.handle_job(JobAction.TRIM, params, force_run)
 
     # Return stored status if cached; queued otherwise
     return {
@@ -132,17 +154,9 @@ async def get_job_result(job_id: str) -> Dict[str, Any]:
     return result
 
 
-async def main() -> None:
+if __name__ == "__main__":
     """
     This is the main method to bring up our MCP server
     """
 
-    # Start worker loop once
-    await asyncio.create_task(_run_worker_forever())
-
-    # Run MCP server over stdio
     mcp.run(transport="stdio")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
