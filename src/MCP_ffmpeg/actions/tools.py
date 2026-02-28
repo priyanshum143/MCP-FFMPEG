@@ -2,7 +2,9 @@
 This file contains the code for different FFmpeg tools
 """
 
+import os
 import asyncio
+import shutil
 from pathlib import Path
 
 from MCP_ffmpeg.utils.loggers import get_logger, get_job_ffmpeg_logger
@@ -27,6 +29,13 @@ async def trim_a_video(
     :return: trimmed video path
     """
 
+    # Checking if the ffmpeg exists
+    ffmpeg = os.getenv("FFMPEG_PATH") or shutil.which("ffmpeg")
+    if not ffmpeg or not Path(ffmpeg).exists():
+        raise FileNotFoundError(
+            "ffmpeg.exe not found. Set FFMPEG_PATH in claude_desktop_configs.json"
+        )
+
     # Checking if the input file exists
     input_path = Path(input_file)
     logger.debug(f"Input file's path for trim: [{input_path}]")
@@ -40,7 +49,7 @@ async def trim_a_video(
 
     # Creating a command for the trim action
     cmd = [
-        "ffmpeg",
+        ffmpeg,
         "-y",
         "-ss", str(start_time),
         "-i", str(input_path),
