@@ -4,9 +4,9 @@ This file contains the util methods to interact with CLI
 
 import asyncio
 
-from src.MCP_ffmpeg.jobs.models import JobAction
-from src.MCP_ffmpeg.actions.models import JOB_ACTION_PARAMS
-from src.MCP_ffmpeg.utils.loggers import get_logger
+from MCP_ffmpeg.jobs.models import JobAction
+from MCP_ffmpeg.actions.models import JOB_ACTION_PARAMS
+from MCP_ffmpeg.utils.loggers import get_logger
 
 logger = get_logger(__name__)
 

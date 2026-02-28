@@ -5,8 +5,8 @@ This file contains the code for different FFmpeg tools
 import asyncio
 from pathlib import Path
 
-from src.MCP_ffmpeg.utils.loggers import get_logger, get_job_ffmpeg_logger
-from src.MCP_ffmpeg.utils.variables import CommonVariables
+from MCP_ffmpeg.utils.loggers import get_logger, get_job_ffmpeg_logger
+from MCP_ffmpeg.utils.variables import CommonVariables
 
 logger = get_logger(__name__)
 

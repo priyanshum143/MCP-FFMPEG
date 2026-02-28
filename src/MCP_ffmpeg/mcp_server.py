@@ -5,15 +5,15 @@ This file contains the code related to MCP server
 import asyncio
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from mcp.server.fastmcp import FastMCP
 
-from src.MCP_ffmpeg.jobs.job_manager import JobManager
-from src.MCP_ffmpeg.jobs.worker import Worker
-from src.MCP_ffmpeg.jobs.models import JobAction, JobStatus
-from src.MCP_ffmpeg.utils.loggers import get_logger
-from src.MCP_ffmpeg.utils.variables import CommonVariables
+from MCP_ffmpeg.jobs.job_manager import JobManager
+from MCP_ffmpeg.jobs.worker import Worker
+from MCP_ffmpeg.jobs.models import JobAction
+from MCP_ffmpeg.utils.loggers import get_logger
+from MCP_ffmpeg.utils.variables import CommonVariables
 
 logger = get_logger(__name__)
 
@@ -138,7 +138,7 @@ async def main() -> None:
     """
 
     # Start worker loop once
-    asyncio.create_task(_run_worker_forever())
+    await asyncio.create_task(_run_worker_forever())
 
     # Run MCP server over stdio
     mcp.run(transport="stdio")

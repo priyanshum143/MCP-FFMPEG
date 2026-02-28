@@ -4,12 +4,12 @@ This is a main file to run our MCP server
 
 import asyncio
 
-from src.MCP_ffmpeg.jobs.worker import Worker
-from src.MCP_ffmpeg.jobs.job_manager import JobManager
-from src.MCP_ffmpeg.jobs.models import JobAction
-from src.MCP_ffmpeg.utils.loggers import get_logger
-from src.MCP_ffmpeg.utils.cli_utils import prompt_params_for_action
-from src.MCP_ffmpeg.utils.variables import CommonVariables
+from MCP_ffmpeg.jobs.worker import Worker
+from MCP_ffmpeg.jobs.job_manager import JobManager
+from MCP_ffmpeg.jobs.models import JobAction
+from MCP_ffmpeg.utils.loggers import get_logger
+from MCP_ffmpeg.utils.cli_utils import prompt_params_for_action
+from MCP_ffmpeg.utils.variables import CommonVariables
 
 job_manager = JobManager()
 worker = Worker()

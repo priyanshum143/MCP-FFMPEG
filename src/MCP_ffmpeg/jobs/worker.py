@@ -5,12 +5,11 @@ This file contains the code to pick a task from jobs queue and execute it
 import asyncio
 import json
 from datetime import datetime
-from typing import Dict, Type
 
-from src.MCP_ffmpeg.actions.models import JOB_ACTION_MAPPING, JOB_ACTION_PARAMS
-from src.MCP_ffmpeg.jobs.models import JobStatus, JobAction
-from src.MCP_ffmpeg.utils.loggers import get_logger
-from src.MCP_ffmpeg.utils.variables import CommonVariables
+from MCP_ffmpeg.actions.models import JOB_ACTION_MAPPING
+from MCP_ffmpeg.jobs.models import JobStatus, JobAction
+from MCP_ffmpeg.utils.loggers import get_logger
+from MCP_ffmpeg.utils.variables import CommonVariables
 
 logger = get_logger(__name__)
 

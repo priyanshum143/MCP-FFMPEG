@@ -4,8 +4,8 @@ This file contains the models related to the tools
 
 from typing import Dict, Type
 
-from src.MCP_ffmpeg.jobs.models import JobAction
-from src.MCP_ffmpeg.actions.tools import trim_a_video
+from MCP_ffmpeg.jobs.models import JobAction
+from MCP_ffmpeg.actions.tools import trim_a_video
 
 # Mapping of jobs and the params they require
 JOB_ACTION_PARAMS: Dict[JobAction, Dict[str, Type]] = {

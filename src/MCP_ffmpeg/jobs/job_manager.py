@@ -8,11 +8,11 @@ import asyncio
 from dataclasses import asdict
 from typing import Tuple
 
-from src.MCP_ffmpeg.jobs.models import JobAction, JobDetails, JobStatus
-from src.MCP_ffmpeg.utils.variables import CommonVariables
-from src.MCP_ffmpeg.utils.loggers import get_logger
-from src.MCP_ffmpeg.utils.serialization import freeze
-from src.MCP_ffmpeg.actions.models import JOB_ACTION_PARAMS
+from MCP_ffmpeg.jobs.models import JobAction, JobDetails, JobStatus
+from MCP_ffmpeg.utils.variables import CommonVariables
+from MCP_ffmpeg.utils.loggers import get_logger
+from MCP_ffmpeg.utils.serialization import freeze
+from MCP_ffmpeg.actions.models import JOB_ACTION_PARAMS
 
 logger = get_logger(__name__)
 

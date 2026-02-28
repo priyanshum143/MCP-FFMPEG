@@ -6,7 +6,7 @@ import logging
 import sys
 from datetime import datetime
 
-from src.MCP_ffmpeg.utils.variables import CommonVariables
+from MCP_ffmpeg.utils.variables import CommonVariables
 
 
 def setup_logger(name: str, log_file: str = None, level=logging.DEBUG):
@@ -34,6 +34,7 @@ def setup_logger(name: str, log_file: str = None, level=logging.DEBUG):
     # Create logger
     logger = logging.getLogger(name)
     logger.setLevel(level)
+    logger.propagate = False
 
     # Avoid duplicate handlers if logger already exists
     if logger.handlers:
@@ -50,7 +51,7 @@ def setup_logger(name: str, log_file: str = None, level=logging.DEBUG):
     )
 
     # Console handler (INFO and above, simple format)
-    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(simple_formatter)
 
