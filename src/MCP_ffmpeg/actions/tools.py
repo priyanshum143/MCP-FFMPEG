@@ -116,3 +116,82 @@ async def trim_a_video(
     logger.info(f"job_id={job_id} | Trim complete | output={output_file}")
     ffmpeg_log.info(f"Success. Output: {output_file}")
     return str(output_file)
+
+
+async def change_video_format(
+    input_file: str,
+    output_format: str,
+    job_id: str,
+) -> str:
+    """
+    This method will change the format (container) of the given video file.
+
+    :param input_file: input video file
+    :param output_format: desired output format (e.g., mp4, mkv, avi)
+    :param job_id: job id
+    :return: converted video path
+    """
+
+    # Checking if the ffmpeg exists
+    ffmpeg = _resolve_ffmpeg()
+
+    # Checking if the input file exists
+    input_path = Path(input_file)
+    logger.debug(f"Input file's path for format change: [{input_path}]")
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file not found: {input_file}")
+
+    # Normalize output format (remove dot if provided)
+    output_format = output_format.lstrip(".")
+
+    # Setting up the output file directory
+    job_dir = CommonVariables.OUTPUT_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    output_file = job_dir / f"output.{output_format}"
+    logger.debug(f"Output file will be stored at: [{output_file}]")
+
+    # Creating command for format change
+    cmd = [
+        ffmpeg,
+        "-y",
+        "-i", str(input_path),
+        "-c", "copy",   # no re-encoding, just container change
+        str(output_file),
+    ]
+    logger.debug(f"Command used to change video format: [{cmd}]")
+
+    # Setting up the logger file for this action
+    ffmpeg_log = get_job_ffmpeg_logger(job_id)
+    ffmpeg_log.info("Command: %s", " ".join(map(str, cmd)))
+
+    # Starting the process
+    logger.info(f"\njob_id={job_id} | Starting format change | input={input_path}")
+    process = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    # Stream stderr to file line-by-line
+    stderr_lines: list[str] = []
+    while True:
+        line = await process.stderr.readline()
+        if not line:
+            break
+        msg = line.decode(errors="replace").rstrip()
+        stderr_lines.append(msg)
+        ffmpeg_log.info(msg)
+
+    # Checking return code
+    return_code = await process.wait()
+    if return_code != 0:
+        tail = "\n".join(stderr_lines[-20:])
+        logger.error(f"job_id={job_id} | FFmpeg format change failed")
+        ffmpeg_log.error(f"FFmpeg exited with code={return_code}")
+        raise RuntimeError("FFmpeg format change failed\n" + tail)
+
+    logger.info(f"job_id={job_id} | Format change complete | output={output_file}")
+    ffmpeg_log.info(f"Success. Output: {output_file}")
+
+    return str(output_file)

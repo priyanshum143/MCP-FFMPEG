@@ -7,13 +7,15 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict
 
+
 class JobAction(Enum):
     TRIM = "trim"
+    CHANGE_FORMAT = "change_format"
 
 
 class JobStatus(Enum):
     QUEUED = "queued"
-    RUNNING =  "running"
+    RUNNING = "running"
     SUCCESS = "success"
     FAILED = "failed"
 

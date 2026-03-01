@@ -105,10 +105,36 @@ async def start_trim(
         "start_time": start_time,
         "duration": duration,
     }
-
     status, job_id = await job_manager.handle_job(JobAction.TRIM, params, force_run)
 
     # Return stored status if cached; queued otherwise
+    return {
+        "job_id": job_id,
+        "status": status.value if hasattr(status, "value") else str(status),
+        "job_details_path": str(_job_details_path(job_id)),
+    }
+
+
+@mcp.tool()
+async def start_change_format(
+    input_file: str,
+    output_format: str,
+    force_run: bool = False,
+) -> Dict[str, Any]:
+    """
+    Enqueue a CHANGE_FORMAT job. Converts video to another container (e.g. mp4, mkv, avi) without re-encoding.
+    Returns immediately with job_id + status.
+
+    input_file: path to input video file (must exist)
+    output_format: desired output format (e.g., mp4, mkv, avi); dot is optional
+    force_run: if True, run even when a cached result exists for the same inputs
+    """
+    params = {
+        "input_file": input_file,
+        "output_format": output_format,
+    }
+    status, job_id = await job_manager.handle_job(JobAction.CHANGE_FORMAT, params, force_run)
+
     return {
         "job_id": job_id,
         "status": status.value if hasattr(status, "value") else str(status),
@@ -150,9 +176,14 @@ async def get_job_result(job_id: str) -> Dict[str, Any]:
     }
 
     try:
-        input_file = details["params"]["input_file"]
-        suffix = Path(input_file).suffix
-        output_path = CommonVariables.OUTPUT_DIR / job_id / f"output{suffix}"
+        params = details.get("params", {})
+        if "output_format" in params:
+            fmt = params["output_format"].lstrip(".")
+            output_path = CommonVariables.OUTPUT_DIR / job_id / f"output.{fmt}"
+        else:
+            input_file = params.get("input_file", "")
+            suffix = Path(input_file).suffix
+            output_path = CommonVariables.OUTPUT_DIR / job_id / f"output{suffix}"
         result["output_path"] = str(output_path)
     except Exception:
         pass
