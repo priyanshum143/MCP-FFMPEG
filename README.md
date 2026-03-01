@@ -67,6 +67,30 @@ uv run python -m MCP_ffmpeg.mcp_server
 
 Or point your MCP config to the `mcp-ffmpeg` package and the `mcp_server` module as needed by your client.
 
+Dummy `claude_desktop_config.json` file
+
+```bash
+{
+  "mcpServers": {
+    "mcp-ffmpeg": {
+      "command": "MCP-FFMPEG\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "MCP_ffmpeg.mcp_server"
+      ],
+      "env": {
+        "FFMPEG_PATH": "C:\\ffmpeg\\bin\\ffmpeg.exe"
+      }
+    }
+  },
+  "preferences": {
+    "coworkWebSearchEnabled": true,
+    "sidebarMode": "chat",
+    "coworkScheduledTasksEnabled": false
+  }
+}
+```
+
 ## Project layout
 
 ```
@@ -83,4 +107,4 @@ src/MCP_ffmpeg/
 
 ## License
 
-See repository for license information.
+No license required, Clone/Fork the repo and enjoy.
