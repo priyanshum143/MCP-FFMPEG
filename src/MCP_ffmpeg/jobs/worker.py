@@ -23,11 +23,14 @@ class Worker:
         self.parallel_execution_allowed = CommonVariables.PARALLEL_EXECUTIONS_ALLOWED
         self.execution_in_progress = 0
 
-    async def get_task_from_queue_and_execute(self, job_queue: asyncio.Queue) -> None:
+    async def get_task_from_queue_and_execute(
+        self, job_queue: asyncio.Queue, worker_id: int | None = None
+    ) -> None:
         """
         This method will dequeue the task from jobs queue and execute the task
 
         :param job_queue: queue with job ids
+        :param worker_id: optional id of the worker (for logging which worker picked which job)
         :return: True if launched a task, False otherwise
         """
 
@@ -44,6 +47,8 @@ class Worker:
             return
 
         job_id = await job_queue.get()
+        if worker_id is not None:
+            logger.debug("Worker [%s] picked job [%s]", worker_id, job_id)
         logger.debug(f"Got the job id [{job_id}] from queue")
         self.execution_in_progress += 1
 

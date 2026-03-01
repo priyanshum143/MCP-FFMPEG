@@ -23,31 +23,37 @@ job_manager = JobManager()
 worker = Worker()
 
 
-async def _run_worker_forever() -> None:
+async def _run_worker_forever(worker_id: int) -> None:
     """
-    Background worker loop. Runs forever.
+    One worker loop: repeatedly take a job from the queue (when available) and execute it.
+    Multiple workers share the same queue; each job is taken by exactly one worker.
     """
 
-    logger.info("Worker background loop started")
     while True:
-        await worker.get_task_from_queue_and_execute(job_manager.job_queue)
+        await worker.get_task_from_queue_and_execute(
+            job_manager.job_queue, worker_id=worker_id
+        )
         await asyncio.sleep(CommonVariables.WORKER_RE_RUN_TIME)
 
 
 @asynccontextmanager
 async def app_lifespan(server: FastMCP) -> AsyncIterator[None]:
     """
-    FastMCP lifespan hook: start background worker without blocking initialization.
+    FastMCP lifespan hook: start N background workers without blocking initialization.
     """
-    task = asyncio.create_task(_run_worker_forever())
+    num_workers = CommonVariables.PARALLEL_EXECUTIONS_ALLOWED
+    tasks = [asyncio.create_task(_run_worker_forever(worker_id=i)) for i in range(num_workers)]
+    logger.debug("Started %s MCP worker(s)", num_workers)
     try:
         yield
     finally:
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
+        for task in tasks:
+            task.cancel()
+        for task in tasks:
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
 
 # Create server WITH lifespan so the worker starts in background

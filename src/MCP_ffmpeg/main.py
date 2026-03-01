@@ -16,17 +16,18 @@ worker = Worker()
 logger = get_logger(__name__)
 
 
-async def run_worker():
+async def run_worker(worker_id: int):
     """
-    Ths method will start the worker to make it run in background forever
+    One worker loop: repeatedly take a job from the queue (when available) and execute it.
+    Multiple run_worker tasks share the same queue; each job is taken by exactly one worker.
     """
 
-    logger.debug("Worker started!!")
     while True:
         await worker.get_task_from_queue_and_execute(
-            job_manager.job_queue
+            job_manager.job_queue, worker_id=worker_id
         )
         await asyncio.sleep(CommonVariables.WORKER_RE_RUN_TIME)
+
 
 async def main():
     """
@@ -35,8 +36,11 @@ async def main():
 
     logger.info("MCP FFmpeg Server started!!")
 
-    # start worker in background
-    asyncio.create_task(run_worker())
+    # start N workers in background (N = PARALLEL_EXECUTIONS_ALLOWED); each checks the queue and runs jobs
+    num_workers = CommonVariables.PARALLEL_EXECUTIONS_ALLOWED
+    for i in range(num_workers):
+        asyncio.create_task(run_worker(worker_id=i))
+    logger.debug("Started %s worker(s)", num_workers)
 
     while True:
         # Printing all the available actions
