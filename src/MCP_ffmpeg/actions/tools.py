@@ -2,15 +2,44 @@
 This file contains the code for different FFmpeg tools
 """
 
+import os
+import shutil
 import asyncio
 from pathlib import Path
 
 from MCP_ffmpeg.utils.loggers import get_logger, get_job_ffmpeg_logger
-from MCP_ffmpeg.utils.cli_utils import resolve_ffmpeg
 from MCP_ffmpeg.utils.variables import CommonVariables
 
 logger = get_logger(__name__)
 
+
+def _resolve_ffmpeg() -> str:
+    """
+    Resolve ffmpeg executable path in this priority order:
+    1. FFMPEG_PATH env variable (Claude MCP case)
+    2. ffmpeg available in system PATH (CLI case)
+    3. Common Windows install location (fallback)
+    """
+
+    # 1️⃣ Env variable (for Claude Desktop)
+    env_path = os.getenv("FFMPEG_PATH")
+    if env_path and Path(env_path).exists():
+        return env_path
+
+    # 2️⃣ System PATH (for CLI use)
+    which_path = shutil.which("ffmpeg")
+    if which_path:
+        return which_path
+
+    # 3️⃣ Common Windows fallback
+    default_path = Path("C:/ffmpeg/bin/ffmpeg.exe")
+    if default_path.exists():
+        return str(default_path)
+
+    raise FileNotFoundError(
+        "ffmpeg.exe not found.\n"
+        "Install FFmpeg or set FFMPEG_PATH env variable."
+    )
 
 async def trim_a_video(
     input_file: str,
@@ -29,7 +58,7 @@ async def trim_a_video(
     """
 
     # Checking if the ffmpeg exists
-    ffmpeg = resolve_ffmpeg()
+    ffmpeg = _resolve_ffmpeg()
 
     # Checking if the input file exists
     input_path = Path(input_file)
