@@ -41,6 +41,7 @@ def _resolve_ffmpeg() -> str:
         "Install FFmpeg or set FFMPEG_PATH env variable."
     )
 
+
 async def trim_a_video(
     input_file: str,
     start_time: float,
@@ -192,6 +193,84 @@ async def change_video_format(
         raise RuntimeError("FFmpeg format change failed\n" + tail)
 
     logger.info(f"job_id={job_id} | Format change complete | output={output_file}")
+    ffmpeg_log.info(f"Success. Output: {output_file}")
+
+    return str(output_file)
+
+
+async def change_video_resolution(
+    input_file: str,
+    height: int,
+    width: int,
+    job_id: str,
+) -> str:
+    """
+    This method will change the resolution of the given video file.
+
+    :param input_file: input video file
+    :param height: target height
+    :param width: target width
+    :param job_id: job id
+    :return: converted video path
+    """
+
+    # Checking if the ffmpeg exists
+    ffmpeg = _resolve_ffmpeg()
+
+    # Checking if the input file exists
+    input_path = Path(input_file)
+    logger.debug(f"Input file's path for resolution change: [{input_path}]")
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file not found: {input_file}")
+
+    # Setting up the output file directory
+    job_dir = CommonVariables.OUTPUT_DIR / job_id
+    output_file = job_dir / f"output{input_path.suffix}"
+    logger.debug(f"Output file will be stored at: [{output_file}]")
+
+    # Creating command for resolution change (re-encoding required)
+    cmd = [
+        ffmpeg,
+        "-y",
+        "-i", str(input_path),
+        "-vf", f"scale={width}:{height}",
+        "-c:v", "libx264",
+        "-c:a", "copy",
+        str(output_file),
+    ]
+    logger.debug(f"Command used to change video resolution: [{cmd}]")
+
+    # Setting up the logger file for this action
+    ffmpeg_log = get_job_ffmpeg_logger(job_id)
+    ffmpeg_log.info("Command: %s", " ".join(map(str, cmd)))
+
+    # Starting the process
+    logger.info(f"\njob_id={job_id} | Starting resolution change | input={input_path}")
+    process = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    # Stream stderr to file line-by-line
+    stderr_lines: list[str] = []
+    while True:
+        line = await process.stderr.readline()
+        if not line:
+            break
+        msg = line.decode(errors="replace").rstrip()
+        stderr_lines.append(msg)
+        ffmpeg_log.info(msg)
+
+    # Checking return code
+    return_code = await process.wait()
+    if return_code != 0:
+        tail = "\n".join(stderr_lines[-20:])
+        logger.error(f"job_id={job_id} | FFmpeg resolution change failed")
+        ffmpeg_log.error(f"FFmpeg exited with code={return_code}")
+        raise RuntimeError("FFmpeg resolution change failed\n" + tail)
+
+    logger.info(f"job_id={job_id} | Resolution change complete | output={output_file}")
     ffmpeg_log.info(f"Success. Output: {output_file}")
 
     return str(output_file)
