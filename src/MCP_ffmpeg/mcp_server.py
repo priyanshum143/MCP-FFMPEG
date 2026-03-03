@@ -163,7 +163,7 @@ async def start_change_resolution(
         "height": height,
         "width": width,
     }
-    status, job_id = await job_manager.handle_job(JobAction.CHANGE_FORMAT, params, force_run)
+    status, job_id = await job_manager.handle_job(JobAction.CHANGE_RESOLUTION, params, force_run)
 
     return {
         "job_id": job_id,
