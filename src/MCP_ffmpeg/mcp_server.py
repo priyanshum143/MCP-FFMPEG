@@ -143,7 +143,7 @@ async def start_change_format(
 
 
 @mcp.tool()
-async def start_change_format(
+async def start_change_resolution(
     input_file: str,
     height: int,
     width: int,
