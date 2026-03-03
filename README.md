@@ -12,6 +12,7 @@ An MCP (Model Context Protocol) server and CLI for running FFmpeg jobs via a job
 - **Actions**
   - **Trim** — Cut a segment from a video (start time + duration).
   - **Change format** — Convert to another container (e.g. mp4 → mkv) without re-encoding.
+  - **Change resolution** — Convert to another resolution, height and width provided by user
 - **Caching** — Same inputs produce the same job ID; completed jobs are reused unless `force_run` is used.
 
 ## Requirements
