@@ -14,3 +14,11 @@ class CommonVariables:
 
     PARALLEL_EXECUTIONS_ALLOWED = 3
     WORKER_RE_RUN_TIME = 10
+
+    SUB_ENCODER_MAP: dict[str, str] = {
+        "srt": "subrip",
+        "vtt": "webvtt",
+        "ass": "ass",
+        "ssa": "ssa",
+    }
+    UNSUPPORTED_BY_FFMPEG = {"scc"}

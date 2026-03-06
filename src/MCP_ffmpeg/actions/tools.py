@@ -304,6 +304,20 @@ async def change_subtitle_format(
     if not fmt:
         raise ValueError("target_format must be a non-empty extension like 'srt' or 'vtt'")
 
+    if fmt in CommonVariables.UNSUPPORTED_BY_FFMPEG:
+        raise ValueError(
+            f"Requested subtitle format '{fmt}' is not supported by FFmpeg as an encoder in most builds. "
+            f"Use an external converter for '{fmt}' (e.g., SCC tools / CaptionExtractor), "
+            f"or convert to a supported format like: {', '.join(sorted(CommonVariables.SUB_ENCODER_MAP.keys()))}."
+        )
+
+    encoder = CommonVariables.SUB_ENCODER_MAP.get(fmt)
+    if not encoder:
+        raise ValueError(
+            f"Unsupported target subtitle format '{fmt}'. "
+            f"Supported: {', '.join(sorted(CommonVariables.SUB_ENCODER_MAP.keys()))}"
+        )
+
     # Setting up the output file directory
     job_dir = CommonVariables.OUTPUT_DIR / job_id
     output_file = job_dir / f"output.{fmt}"
