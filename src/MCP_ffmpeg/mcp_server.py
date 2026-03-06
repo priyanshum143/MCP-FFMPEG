@@ -173,6 +173,32 @@ async def start_change_resolution(
 
 
 @mcp.tool()
+async def start_subtitle_format_change(
+    input_file: str,
+    target_format: str,
+    force_run: bool = False,
+) -> Dict[str, Any]:
+    """
+    Enqueue a CHANGE_SUBTITLE_FORMAT job. Converts the subtitle format according to the user's provided details.
+    Returns immediately with job_id + status.
+
+    input_file: path to input video file (must exist)
+    target_format: target subtitle format
+    force_run: if True, run even when a cached result exists for the same inputs
+    """
+    params = {
+        "input_file": input_file,
+        "target_format": target_format,
+    }
+    status, job_id = await job_manager.handle_job(JobAction.CHANGE_SUBTITLE_FORMAT, params, force_run)
+
+    return {
+        "job_id": job_id,
+        "status": status.value if hasattr(status, "value") else str(status),
+        "job_details_path": str(_job_details_path(job_id)),
+    }
+
+@mcp.tool()
 async def get_job_status(job_id: str) -> Dict[str, Any]:
     """
     Get the latest status for a job_id.
