@@ -12,6 +12,7 @@ class JobAction(Enum):
     TRIM = "trim"
     CHANGE_FORMAT = "change_format"
     CHANGE_RESOLUTION = "change_resolution"
+    CHANGE_SUBTITLE_FORMAT = "change_subtitle_format"
 
 
 class JobStatus(Enum):

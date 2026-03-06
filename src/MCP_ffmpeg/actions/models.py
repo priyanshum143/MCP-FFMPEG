@@ -9,6 +9,7 @@ from MCP_ffmpeg.actions.tools import (
     trim_a_video,
     change_video_format,
     change_video_resolution,
+    change_subtitle_format,
 )
 
 
@@ -27,7 +28,11 @@ JOB_ACTION_PARAMS: Dict[JobAction, Dict[str, Type]] = {
         "input_file": str,
         "height": int,
         "width": int,
-    }
+    },
+    JobAction.CHANGE_SUBTITLE_FORMAT: {
+        "input_file": str,
+        "target_format": str,
+    },
 }
 
 
@@ -36,4 +41,5 @@ JOB_ACTION_MAPPING = {
     JobAction.TRIM: trim_a_video,
     JobAction.CHANGE_FORMAT: change_video_format,
     JobAction.CHANGE_RESOLUTION: change_video_resolution,
+    JobAction.CHANGE_SUBTITLE_FORMAT: change_subtitle_format,
 }
