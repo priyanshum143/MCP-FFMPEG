@@ -1,0 +1,40 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-n-publish:
+    name: Build and publish Python 🐍 distribution 📦 to PyPI
+    runs-on: ubuntu-latest
+    # This 'pypi' environment must match what you typed into the PyPI dashboard
+    environment: pypi
+    permissions:
+      # This permission is REQUIRED for Trusted Publishing (OIDC)
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Build package
+        # This creates the .whl and .tar.gz files in the /dist folder
+        run: uv build
+
+      - name: Publish package to PyPI
+        # This action automatically detects the OIDC token from GitHub
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # We don't need a password/token here because of 'Trusted Publishing'
+          print-hash: true

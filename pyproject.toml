@@ -1,11 +1,33 @@
 [project]
 name = "mcp-ffmpeg"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Model Context Protocol server for FFmpeg media processing"
 readme = "README.md"
-requires-python = ">=3.13"
+authors = [
+    { name = "Priyanshu", email = "mehtapriyanshu408@gmail.com" }
+]
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["mcp", "ffmpeg", "video", "audio", "processing"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Multimedia :: Video",
+]
 dependencies = [
     "ffmpeg-python>=0.2.0",
     "httpx>=0.28.1",
-    "mcp[cli]>=1.26.0",
+    "mcp[cli]>=1.3.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/priyanshum143/MCP-FFMPEG"
+Issues = "https://github.com/priyanshum143/MCP-FFMPEG/issues"
+
+[project.scripts]
+mcp-ffmpeg = "MCP_ffmpeg.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
