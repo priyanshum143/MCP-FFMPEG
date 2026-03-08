@@ -59,36 +59,19 @@ python -m MCP_ffmpeg.main
 
 You get a menu: choose an action, enter the requested parameters. Jobs are enqueued and processed by background workers. Logs show which worker picked which job.
 
-### MCP server (stdio)
+### Claude Desktop Integration
 
-For MCP clients (e.g. Claude Desktop) that talk over stdio:
+Add this to your `%APPDATA%\Claude\claude_desktop_config.json`:
 
-```bash
-uv run python -m MCP_ffmpeg.mcp_server
-```
-
-Or point your MCP config to the `mcp-ffmpeg` package and the `mcp_server` module as needed by your client.
-
-Dummy `claude_desktop_config.json` file
-
-```bash
+```json
 {
   "mcpServers": {
     "mcp-ffmpeg": {
-      "command": "MCP-FFMPEG\\.venv\\Scripts\\python.exe",
-      "args": [
-        "-m",
-        "MCP_ffmpeg.mcp_server"
-      ],
+      "command": "mcp-ffmpeg",
       "env": {
-        "FFMPEG_PATH": "C:\\ffmpeg\\bin\\ffmpeg.exe"
+        "FFMPEG_PATH": "C:\\path\\to\\your\\ffmpeg.exe"
       }
     }
-  },
-  "preferences": {
-    "coworkWebSearchEnabled": true,
-    "sidebarMode": "chat",
-    "coworkScheduledTasksEnabled": false
   }
 }
 ```
@@ -110,3 +93,13 @@ src/MCP_ffmpeg/
 ## License
 
 No license required, Clone/Fork the repo and enjoy.
+
+## Author
+
+**Priyanshu** CSE 2025 Graduate | Software Engineer at Amagi Media Labs
+
+- **GitHub**: [priyanshum143](https://github.com/priyanshum143)
+- **LinkedIn**: [Priyanshu Mehta](https://www.linkedin.com/in/priyanshu-mehta-a40799238/) 
+- **Project Repository**: [MCP-FFMPEG](https://github.com/priyanshum143/MCP-FFMPEG)
+
+Feel free to reach out for collaborations or if you encounter any issues!
