@@ -82,5 +82,13 @@ async def main():
         logger.debug(f"Job handled with status {status}")
 
 
-if __name__ == "__main__":
+def run_server():
+    """
+    This is the SYNCHRONOUS entry point for the CLI.
+    It boots the event loop and runs your async main().
+    """
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    run_server()
