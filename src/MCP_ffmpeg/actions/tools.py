@@ -368,3 +368,98 @@ async def change_subtitle_format(
     ffmpeg_log.info(f"Success. Output: {output_file}")
 
     return str(output_file)
+
+
+async def extract_audio_from_video(
+    input_file: str,
+    target_format: str,
+    job_id: str,
+) -> str:
+    """
+    This method will extract the first audio stream from a video file and save it
+    in the requested audio format (e.g. mp3, aac, wav, flac, m4a).
+
+    :param input_file: input video file path
+    :param target_format: desired audio format/extension (e.g. "mp3", "aac", "wav", "flac", "m4a")
+    :param job_id: job id
+    :return: extracted audio file path
+    """
+
+    # Checking if the ffmpeg exists
+    ffmpeg = _resolve_ffmpeg()
+
+    # Checking if the input file exists
+    input_path = Path(input_file)
+    logger.debug(f"Input file's path for audio extraction: [{input_path}]")
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file not found: {input_file}")
+
+    # Normalize/validate target format
+    fmt = target_format.lower().lstrip(".")
+    if not fmt:
+        raise ValueError("target_format must be a non-empty extension like 'mp3' or 'wav'")
+
+    encoder = CommonVariables.AUDIO_ENCODER_MAPPING.get(fmt)
+    if not encoder:
+        raise ValueError(
+            f"Unsupported target audio format '{fmt}'. "
+            f"Supported: {', '.join(sorted(CommonVariables.AUDIO_ENCODER_MAPPING.keys()))}"
+        )
+
+    # Setting up the output file directory
+    job_dir = CommonVariables.OUTPUT_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    output_file = job_dir / f"output.{fmt}"
+    logger.debug(f"Extracted audio will be stored at: [{output_file}]")
+
+    # Creating command for audio extraction
+    cmd = [
+        ffmpeg,
+        "-y",
+        "-i", str(input_path),
+        "-vn",
+        "-map", "0:a:0",
+        "-c:a", encoder,
+        str(output_file),
+    ]
+    logger.debug(f"Command used to extract audio from video: [{cmd}]")
+
+    # Setting up the logger file for this action
+    ffmpeg_log = get_job_ffmpeg_logger(job_id)
+    ffmpeg_log.info("Command: %s", " ".join(map(str, cmd)))
+
+    # Starting the process
+    logger.info(f"\njob_id={job_id} | Starting audio extraction | input={input_path}")
+    process = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    # Stream stderr to file line-by-line
+    stderr_lines: list[str] = []
+    while True:
+        line = await process.stderr.readline()
+        if not line:
+            break
+        msg = line.decode(errors="replace").rstrip()
+        stderr_lines.append(msg)
+        ffmpeg_log.info(msg)
+
+    # Checking return code
+    return_code = await process.wait()
+    if return_code != 0:
+        tail = "\n".join(stderr_lines[-20:])
+        logger.error(f"job_id={job_id} | FFmpeg audio extraction failed")
+        ffmpeg_log.error(f"FFmpeg exited with code={return_code}")
+        raise RuntimeError(
+            "FFmpeg audio extraction failed. "
+            "The input may not contain an audio stream, or the codec/container may be unsupported.\n"
+            + tail
+        )
+
+    logger.info(f"job_id={job_id} | Audio extraction complete | output={output_file}")
+    ffmpeg_log.info(f"Success. Output: {output_file}")
+
+    return str(output_file)

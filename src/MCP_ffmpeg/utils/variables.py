@@ -22,3 +22,13 @@ class CommonVariables:
         "ssa": "ssa",
     }
     UNSUPPORTED_BY_FFMPEG = {"scc"}
+
+    AUDIO_ENCODER_MAPPING = {
+        "mp3": "libmp3lame",
+        "aac": "aac",
+        "wav": "pcm_s16le",
+        "flac": "flac",
+        "m4a": "aac",
+        "opus": "libopus",
+        "ogg": "libvorbis",
+    }

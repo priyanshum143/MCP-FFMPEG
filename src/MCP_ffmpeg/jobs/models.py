@@ -13,6 +13,7 @@ class JobAction(Enum):
     CHANGE_FORMAT = "change_format"
     CHANGE_RESOLUTION = "change_resolution"
     CHANGE_SUBTITLE_FORMAT = "change_subtitle_format"
+    EXTRACT_AUDIO = "extract_audio"
 
 
 class JobStatus(Enum):
