@@ -14,6 +14,7 @@ An MCP (Model Context Protocol) server and CLI for running FFmpeg jobs via a job
   - **Change video format** — Convert to another container (e.g. mp4 → mkv) without re-encoding.
   - **Change resolution** — Convert to another resolution, height and width provided by user.
   - **Change Subtitle format** — Convert to another subtitle format (e.g. srt -> vtt).
+  - **Extract Audio** - Extract audio from an input video file
 - **Caching** — Same inputs produce the same job ID; completed jobs are reused unless `force_run` is used.
 
 ## Requirements
