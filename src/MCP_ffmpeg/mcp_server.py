@@ -198,6 +198,33 @@ async def start_subtitle_format_change(
         "job_details_path": str(_job_details_path(job_id)),
     }
 
+
+@mcp.tool()
+async def start_audio_extraction(
+    input_file: str,
+    target_format: str = "mp3",
+    force_run: bool = False,
+) -> Dict[str, Any]:
+    """
+    Enqueue a EXTRACT_AUDIO job. Extract the audio from a given video and in the format requested by user
+    Returns immediately with job_id + status.
+
+    input_file: path to input video file (must exist)
+    target_format: target audio format (defaults to mp3)
+    force_run: if True, run even when a cached result exists for the same inputs
+    """
+    params = {
+        "input_file": input_file,
+        "target_format": target_format,
+    }
+    status, job_id = await job_manager.handle_job(JobAction.EXTRACT_AUDIO, params, force_run)
+
+    return {
+        "job_id": job_id,
+        "status": status.value if hasattr(status, "value") else str(status),
+        "job_details_path": str(_job_details_path(job_id)),
+    }
+
 @mcp.tool()
 async def get_job_status(job_id: str) -> Dict[str, Any]:
     """
