@@ -438,19 +438,18 @@ async def extract_audio_from_video(
     )
 
     # Stream stderr to file line-by-line
-    stderr_lines: list[str] = []
-    while True:
-        line = await process.stderr.readline()
-        if not line:
-            break
-        msg = line.decode(errors="replace").rstrip()
-        stderr_lines.append(msg)
-        ffmpeg_log.info(msg)
+    # Read complete stderr after process ends
+    _, stderr_data = await process.communicate()
+    stderr_text = stderr_data.decode(errors="replace")
+
+    if stderr_text:
+        for line in stderr_text.splitlines():
+            ffmpeg_log.info(line)
 
     # Checking return code
-    return_code = await process.wait()
+    return_code = process.returncode
     if return_code != 0:
-        tail = "\n".join(stderr_lines[-20:])
+        tail = "\n".join(stderr_text.splitlines()[-20:])
         logger.error(f"job_id={job_id} | FFmpeg audio extraction failed")
         ffmpeg_log.error(f"FFmpeg exited with code={return_code}")
         raise RuntimeError(
