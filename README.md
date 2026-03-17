@@ -139,5 +139,6 @@ No license required, Clone/Fork the repo and enjoy.
 - **GitHub**: [priyanshum143](https://github.com/priyanshum143)
 - **LinkedIn**: [Priyanshu Mehta](https://www.linkedin.com/in/priyanshu-mehta-a40799238/) 
 - **Project Repository**: [MCP-FFMPEG](https://github.com/priyanshum143/MCP-FFMPEG)
+- **PyPi**: [MCP-FFmpeg](https://pypi.org/project/mcp-ffmpeg/)
 
 Feel free to reach out for collaborations or if you encounter any issues!
