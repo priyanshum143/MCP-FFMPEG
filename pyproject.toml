@@ -27,7 +27,8 @@ Homepage = "https://github.com/priyanshum143/MCP-FFMPEG"
 Issues = "https://github.com/priyanshum143/MCP-FFMPEG/issues"
 
 [project.scripts]
-mcp-ffmpeg = "MCP_ffmpeg.main:run_server"
+mcp-ffmpeg = "MCP_ffmpeg.mcp_server:run"
+mcp-ffmpeg-cli = "MCP_ffmpeg.main:run_server"
 
 [build-system]
 requires = ["hatchling"]

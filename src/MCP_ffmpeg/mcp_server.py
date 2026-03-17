@@ -274,9 +274,12 @@ async def get_job_result(job_id: str) -> Dict[str, Any]:
     return result
 
 
-if __name__ == "__main__":
+def run() -> None:
     """
-    This is the main method to bring up our MCP server
+    Entry point for the mcp-ffmpeg console script: run MCP server over stdio.
     """
-
     mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    run()
