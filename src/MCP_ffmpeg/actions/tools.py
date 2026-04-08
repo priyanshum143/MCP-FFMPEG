@@ -5,6 +5,7 @@ This file contains the code for different FFmpeg tools
 import os
 import shutil
 import asyncio
+import sys
 from pathlib import Path
 
 from MCP_ffmpeg.utils.loggers import get_logger, get_job_ffmpeg_logger
@@ -39,6 +40,27 @@ def _resolve_ffmpeg() -> str:
     raise FileNotFoundError(
         "ffmpeg.exe not found.\n"
         "Install FFmpeg or set FFMPEG_PATH env variable."
+    )
+
+
+def _resolve_whisper() -> list[str]:
+    """
+    Resolve how to invoke Whisper.
+    Preference:
+    1. Use `python -m whisper` from the current interpreter
+    2. Fallback to `whisper` executable from PATH
+    """
+    try:
+        import whisper  # noqa: F401
+        return [sys.executable, "-m", "whisper"]
+    except Exception:
+        whisper_bin = shutil.which("whisper")
+        if whisper_bin:
+            return [whisper_bin]
+
+    raise FileNotFoundError(
+        "Whisper is not available. Ensure `openai-whisper` is installed "
+        "in the current environment or `whisper` is available in PATH."
     )
 
 
@@ -460,5 +482,99 @@ async def extract_audio_from_video(
 
     logger.info(f"job_id={job_id} | Audio extraction complete | output={output_file}")
     ffmpeg_log.info(f"Success. Output: {output_file}")
+
+    return str(output_file)
+
+
+async def extract_video_transcript(
+    input_file: str,
+    job_id: str,
+    model: str = "small",
+    language: str = "en",
+    output_format: str = "txt",
+) -> str:
+    """
+    This method will extract the transcript from a video/audio file using Whisper.
+
+    :param input_file: input video/audio file path
+    :param job_id: job id
+    :param model: Whisper model name (tiny, base, small, medium, large, turbo)
+    :param language: language code (e.g. en, hi)
+    :param output_format: transcript format (txt, srt, vtt, json, tsv)
+    :return: transcript file path
+    """
+
+    # Checking if Whisper is available
+    whisper_cmd = _resolve_whisper()
+
+    # Checking if the input file exists
+    input_path = Path(input_file)
+    logger.debug(f"Input file's path for transcript extraction: [{input_path}]")
+    if not input_path.exists():
+        raise FileNotFoundError(f"Input file not found: {input_file}")
+
+    # Normalize output format (remove dot if provided)
+    fmt = output_format.lower().lstrip(".")
+    if not fmt:
+        raise ValueError("output_format must be a non-empty value like 'txt' or 'srt'")
+
+    # Setting up the output file directory
+    job_dir = CommonVariables.OUTPUT_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    output_file = job_dir / f"{input_path.stem}.{fmt}"
+    logger.debug(f"Output file will be stored at: [{output_file}]")
+
+    # Creating a command for transcript extraction
+    cmd = [
+        *whisper_cmd,
+        str(input_path),
+        "--model", model,
+        "--output_dir", str(job_dir),
+        "--output_format", fmt,
+        "--fp16", "False",
+        "--language", language,
+    ]
+    logger.debug(f"Command used to extract video transcript: [{cmd}]")
+
+    # Setting up the logger file for this action
+    whisper_logs = get_job_ffmpeg_logger(job_id)
+    whisper_logs.info("Command: %s", " ".join(map(str, cmd)))
+
+    # Starting the process to extract the transcript
+    logger.info(f"\njob_id={job_id} | Starting transcript extraction | input={input_path}")
+    process = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    # Stream stderr to file line-by-line
+    # Read complete stderr after process ends
+    _, stderr_data = await process.communicate()
+    stderr_text = stderr_data.decode(errors="replace")
+
+    if stderr_text:
+        for line in stderr_text.splitlines():
+            whisper_logs.info(line)
+
+    # Checking the return code
+    return_code = process.returncode
+    if return_code != 0:
+        tail = "\n".join(stderr_text.splitlines()[-20:])
+        logger.error(f"job_id={job_id} | Whisper transcript extraction failed")
+        whisper_logs.error(f"Whisper exited with code={return_code}")
+        raise RuntimeError("Whisper transcript extraction failed\n" + tail)
+
+    if not output_file.exists():
+        logger.error(
+            f"job_id={job_id} | Whisper completed but transcript file not found | expected={output_file}"
+        )
+        raise FileNotFoundError(
+            f"Transcript file was not generated at expected path: {output_file}"
+        )
+
+    logger.info(f"job_id={job_id} | Transcript extraction complete | output={output_file}")
+    whisper_logs.info(f"Success. Output: {output_file}")
 
     return str(output_file)
