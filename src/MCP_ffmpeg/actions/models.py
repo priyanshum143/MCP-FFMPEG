@@ -11,6 +11,7 @@ from MCP_ffmpeg.actions.tools import (
     change_video_resolution,
     change_subtitle_format,
     extract_audio_from_video,
+    extract_video_transcript,
 )
 
 
@@ -37,7 +38,13 @@ JOB_ACTION_PARAMS: Dict[JobAction, Dict[str, Type]] = {
     JobAction.EXTRACT_AUDIO: {
         "input_file": str,
         "target_format": str,
-    }
+    },
+    JobAction.EXTRACT_VIDEO_TRANSCRIPT: {
+        "input_file": str,
+        "model": str,
+        "language": str,
+        "output_format": str,
+    },
 }
 
 
@@ -48,4 +55,5 @@ JOB_ACTION_MAPPING = {
     JobAction.CHANGE_RESOLUTION: change_video_resolution,
     JobAction.CHANGE_SUBTITLE_FORMAT: change_subtitle_format,
     JobAction.EXTRACT_AUDIO: extract_audio_from_video,
+    JobAction.EXTRACT_VIDEO_TRANSCRIPT: extract_video_transcript,
 }
