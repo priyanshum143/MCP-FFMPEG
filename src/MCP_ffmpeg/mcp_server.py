@@ -225,6 +225,41 @@ async def start_audio_extraction(
         "job_details_path": str(_job_details_path(job_id)),
     }
 
+
+@mcp.tool()
+async def start_video_transcription(
+    input_file: str,
+    model: str = "small",
+    language: str = "en",
+    output_format: str = "txt",
+    force_run: bool = False,
+) -> Dict[str, Any]:
+    """
+    Enqueue a transcript job using Whisper on a video or audio file. Returns immediately with job_id + status.
+
+    input_file: path to input media file (must exist)
+    model: Whisper model name (tiny, base, small, medium, large, turbo)
+    language: language code (e.g. en, hi)
+    output_format: transcript format (txt, srt, vtt, json, tsv)
+    force_run: if True, run even when a cached result exists for the same inputs
+    """
+    params = {
+        "input_file": input_file,
+        "model": model,
+        "language": language,
+        "output_format": output_format,
+    }
+    status, job_id = await job_manager.handle_job(
+        JobAction.EXTRACT_VIDEO_TRANSCRIPT, params, force_run
+    )
+
+    return {
+        "job_id": job_id,
+        "status": status.value if hasattr(status, "value") else str(status),
+        "job_details_path": str(_job_details_path(job_id)),
+    }
+
+
 @mcp.tool()
 async def get_job_status(job_id: str) -> Dict[str, Any]:
     """
@@ -260,7 +295,13 @@ async def get_job_result(job_id: str) -> Dict[str, Any]:
 
     try:
         params = details.get("params", {})
-        if "output_format" in params:
+        action = details.get("action", "")
+        if action == JobAction.EXTRACT_VIDEO_TRANSCRIPT.value:
+            input_file = params.get("input_file", "")
+            fmt = str(params.get("output_format", "txt")).lower().lstrip(".")
+            stem = Path(input_file).stem
+            output_path = CommonVariables.OUTPUT_DIR / job_id / f"{stem}.{fmt}"
+        elif "output_format" in params:
             fmt = params["output_format"].lstrip(".")
             output_path = CommonVariables.OUTPUT_DIR / job_id / f"output.{fmt}"
         else:
