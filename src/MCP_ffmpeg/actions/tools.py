@@ -2,9 +2,11 @@
 This file contains the code for different FFmpeg tools
 """
 
+import importlib.util
 import os
 import shutil
 import asyncio
+import subprocess
 import sys
 from pathlib import Path
 
@@ -49,14 +51,16 @@ def _resolve_whisper() -> list[str]:
     Preference:
     1. Use `python -m whisper` from the current interpreter
     2. Fallback to `whisper` executable from PATH
+
+    Uses find_spec only — do not `import whisper` here: that loads PyTorch into
+    the MCP/async process and can block the event loop for a long time with no logs.
     """
-    try:
-        import whisper  # noqa: F401
+
+    if importlib.util.find_spec("whisper") is not None:
         return [sys.executable, "-m", "whisper"]
-    except Exception:
-        whisper_bin = shutil.which("whisper")
-        if whisper_bin:
-            return [whisper_bin]
+    whisper_bin = shutil.which("whisper")
+    if whisper_bin:
+        return [whisper_bin]
 
     raise FileNotFoundError(
         "Whisper is not available. Ensure `openai-whisper` is installed "
@@ -538,43 +542,39 @@ async def extract_video_transcript(
     logger.debug(f"Command used to extract video transcript: [{cmd}]")
 
     # Setting up the logger file for this action
-    whisper_logs = get_job_ffmpeg_logger(job_id)
-    whisper_logs.info("Command: %s", " ".join(map(str, cmd)))
+    ffmpeg_log = get_job_ffmpeg_logger(job_id)
+    ffmpeg_log.info("Command: %s", " ".join(map(str, cmd)))
 
-    # Starting the process to extract the transcript
+    # Starting the process
     logger.info(f"\njob_id={job_id} | Starting transcript extraction | input={input_path}")
-    process = await asyncio.create_subprocess_exec(
-        *cmd,
-        stdout=asyncio.subprocess.DEVNULL,
-        stderr=asyncio.subprocess.PIPE,
-    )
+    run_kw: dict = {
+        "stdin": subprocess.DEVNULL,
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.PIPE,
+        "check": False,
+    }
+    if sys.platform == "win32":
+        run_kw["creationflags"] = subprocess.CREATE_NO_WINDOW
+    completed = await asyncio.to_thread(subprocess.run, cmd, **run_kw)
 
     # Stream stderr to file line-by-line
     # Read complete stderr after process ends
-    _, stderr_data = await process.communicate()
+    stderr_data = completed.stderr or b""
     stderr_text = stderr_data.decode(errors="replace")
 
     if stderr_text:
         for line in stderr_text.splitlines():
-            whisper_logs.info(line)
+            ffmpeg_log.info(line)
 
-    # Checking the return code
-    return_code = process.returncode
+    # Checking return code
+    return_code = completed.returncode
     if return_code != 0:
         tail = "\n".join(stderr_text.splitlines()[-20:])
         logger.error(f"job_id={job_id} | Whisper transcript extraction failed")
-        whisper_logs.error(f"Whisper exited with code={return_code}")
+        ffmpeg_log.error(f"Whisper exited with code={return_code}")
         raise RuntimeError("Whisper transcript extraction failed\n" + tail)
 
-    if not output_file.exists():
-        logger.error(
-            f"job_id={job_id} | Whisper completed but transcript file not found | expected={output_file}"
-        )
-        raise FileNotFoundError(
-            f"Transcript file was not generated at expected path: {output_file}"
-        )
-
     logger.info(f"job_id={job_id} | Transcript extraction complete | output={output_file}")
-    whisper_logs.info(f"Success. Output: {output_file}")
+    ffmpeg_log.info(f"Success. Output: {output_file}")
 
     return str(output_file)
